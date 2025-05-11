@@ -48,9 +48,6 @@ PHISHING-DETECTION/
 │
 └── .venv/                # Python virtual environment
 
-yaml
-Copy
-Edit
 
 ---
 
@@ -61,78 +58,3 @@ Edit
    ```bash
    git clone https://github.com/yourusername/phishing-detection.git
    cd phishing-detection
-Create a virtual environment:
-
-bash
-Copy
-Edit
-python -m venv .venv
-Activate the environment:
-
-On Windows:
-
-bash
-Copy
-Edit
-.venv\Scripts\activate
-On macOS/Linux:
-
-bash
-Copy
-Edit
-source .venv/bin/activate
-Install the dependencies:
-
-bash
-Copy
-Edit
-pip install -r requirements.txt
-Set up the database:
-
-bash
-Copy
-Edit
-python db_setup.py
-Run the app:
-
-bash
-Copy
-Edit
-python app.py
-Open in your browser:
-Visit http://localhost:5000
-
-🧪 Example Usage
-Enter a URL like http://example.com/login.php
-
-Hit "Check"
-
-The app will display:
-
-✅ Prediction (Safe / Potential Phishing)
-
-📊 Confidence level
-
-🗂️ Scan history in a table
-
-🛠 Tech Stack
-Backend: Python, Flask
-
-Frontend: HTML, CSS, JavaScript
-
-Machine Learning: Scikit-learn
-
-Database: SQLite
-
-📌 To Do
- Add user authentication
-
- Export scan history as CSV
-
- Improve ML model accuracy
-
- Add REST API endpoint
-
-🤝 Contributing
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
-
