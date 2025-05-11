@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>URL Analysis Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="container">
+        <h1>Detailed Analysis Results</h1>
+        
+        <div class="result-box">
+            <h2>URL: <span class="url">{{ url_info.url }}</span></h2>
+            
+            <div class="verdict {% if url_info.is_phishing %}phishing{% else %}safe{% endif %}">
+                <h3>Verdict: {% if url_info.is_phishing %}⚠️ Potential Phishing{% else %}✅ Likely Safe{% endif %}</h3>
+                <p>Confidence: {{ (url_info.confidence * 100)|round(2) }}%</p>
+                <p>Analyzed on: {{ url_info.timestamp }}</p>
+            </div>
+            
+            <div class="feature-section">
+                <h3>URL Features</h3>
+                <table class="features-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Value</th>
+                            <th>Significance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for feature, value in url_info.features.items() %}
+                        <tr>
+                            <td>{{ feature|replace('_', ' ')|title }}</td>
+                            <td>{{ value }}</td>
+                            <td>
+                                {% if feature == 'url_length' %}
+                                    {% if value > 50 %}Long URLs often indicate phishing{% else %}Normal length{% endif %}
+                                {% elif feature == 'domain_length' %}
+                                    {% if value > 15 %}Longer domains may be suspicious{% else %}Normal length{% endif %}
+                                {% elif feature == 'dots_in_domain' %}
+                                    {% if value > 3 %}Multiple dots can indicate phishing{% else %}Normal count{% endif %}
+                                {% elif feature == 'special_chars' %}
+                                    {% if value > 5 %}Excessive special characters are suspicious{% else %}Normal count{% endif %}
+                                {% elif feature == 'has_ip' %}
+                                    {% if value == 1 %}IP addresses instead of domains are suspicious{% else %}Using domain name (good){% endif %}
+                                {% elif feature == 'is_shortened' %}
+                                    {% if value == 1 %}URL shorteners can hide malicious destinations{% else %}Not using URL shortener (good){% endif %}
+                                {% elif feature == 'http_in_domain' %}
+                                    {% if value == 1 %}Having "http" in domain is suspicious{% else %}Normal domain{% endif %}
+                                {% elif feature == 'has_at_symbol' %}
+                                    {% if value == 1 %}@ symbol in URL is a red flag{% else %}No @ symbol (good){% endif %}
+                                {% elif feature == 'double_slash_in_path' %}
+                                    {% if value == 1 %}Double slashes can indicate URL tricks{% else %}Normal path structure{% endif %}
+                                {% elif feature == 'subdomain_count' %}
+                                    {% if value > 2 %}Multiple subdomains may indicate phishing{% else %}Normal subdomain count{% endif %}
+                                {% elif feature == 'suspicious_words' %}
+                                    {% if value > 0 %}Contains words often found in phishing URLs{% else %}No suspicious keywords{% endif %}
+                                {% elif feature == 'domain_age' %}
+                                    {% if value < 30 and value >= 0 %}Very new domain (suspicious)
+                                    {% elif value < 0 %}Unable to determine domain age
+                                    {% else %}Domain has existed for some time (good){% endif %}
+                                {% else %}
+                                    Feature analysis
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if feedback %}
+            <div class="feedback-section">
+                <h3>User Feedback</h3>
+                <p>Verdict was marked as: <strong>{% if feedback.correct %}Correct{% else %}Incorrect{% endif %}</strong></p>
+                {% if feedback.notes %}
+                <p>Notes: {{ feedback.notes }}</p>
+                {% endif %}
+                <p>Feedback submitted on: {{ feedback.timestamp }}</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="back-link">
+            <a href="/">Back to Main Page</a>
+        </div>
+    </div>
+</body>
+</html>

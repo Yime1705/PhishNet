@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phishing URL Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="container">
+        <h1>Phishing URL Detector</h1>
+        
+        <div class="url-form">
+            <input type="text" id="url-input" placeholder="Enter a URL to analyze">
+            <button id="analyze-button">Analyze</button>
+        </div>
+        
+        <div id="loading" class="hidden">
+            <p>Analyzing URL...</p>
+        </div>
+        
+        <div id="results" class="hidden">
+            <h2>Analysis Results</h2>
+            <div class="result-box">
+                <p>URL: <span id="result-url"></span></p>
+                <p>Verdict: <span id="result-verdict"></span></p>
+                <p>Confidence: <span id="result-confidence"></span></p>
+                <div id="feature-details">
+                    <h3>Feature Details</h3>
+                    <table id="features-table">
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="features-body">
+                            <!-- Features will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="feedback-section">
+                    <h3>Provide Feedback</h3>
+                    <p>Was this analysis correct?</p>
+                    <button id="correct-button">Yes</button>
+                    <button id="incorrect-button">No</button>
+                    <textarea id="feedback-notes" placeholder="Additional notes (optional)"></textarea>
+                    <button id="submit-feedback" class="hidden">Submit Feedback</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="history-section">
+            <h2>Recent Analysis History</h2>
+            <button id="load-history">Load History</button>
+            <table id="history-table" class="hidden">
+                <thead>
+                    <tr>
+                        <th>URL</th>
+                        <th>Result</th>
+                        <th>Confidence</th>
+                        <th>Date</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    <!-- History items will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // Variables to store data
+        let currentUrlId = null;
+        let feedbackCorrect = null;
+        
+        // DOM Elements
+        const urlInput = document.getElementById('url-input');
+        const analyzeButton = document.getElementById('analyze-button');
+        const loadingDiv = document.getElementById('loading');
+        const resultsDiv = document.getElementById('results');
+        const resultUrl = document.getElementById('result-url');
+        const resultVerdict = document.getElementById('result-verdict');
+        const resultConfidence = document.getElementById('result-confidence');
+        const featuresBody = document.getElementById('features-body');
+        const correctButton = document.getElementById('correct-button');
+        const incorrectButton = document.getElementById('incorrect-button');
+        const feedbackNotes = document.getElementById('feedback-notes');
+        const submitFeedbackButton = document.getElementById('submit-feedback');
+        const loadHistoryButton = document.getElementById('load-history');
+        const historyTable = document.getElementById('history-table');
+        const historyBody = document.getElementById('history-body');
+        
+        // Event listeners
+        analyzeButton.addEventListener('click', analyzeUrl);
+        correctButton.addEventListener('click', () => provideFeedback(true));
+        incorrectButton.addEventListener('click', () => provideFeedback(false));
+        submitFeedbackButton.addEventListener('click', submitFeedback);
+        loadHistoryButton.addEventListener('click', loadHistory);
+        
+        // Functions
+        function analyzeUrl() {
+            const url = urlInput.value.trim();
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+            
+            // Show loading
+            loadingDiv.classList.remove('hidden');
+            resultsDiv.classList.add('hidden');
+            
+            // Reset feedback
+            feedbackCorrect = null;
+            submitFeedbackButton.classList.add('hidden');
+            
+            // Send request
+            fetch('/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading
+                loadingDiv.classList.add('hidden');
+                
+                // Show results
+                displayResults(data);
+            })
+            .catch(error => {
+                loadingDiv.classList.add('hidden');
+                alert('Error analyzing URL: ' + error);
+            });
+        }
+        
+        function displayResults(data) {
+            // Store URL ID for feedback
+            currentUrlId = data.url_id;
+            
+            // Display results
+            resultUrl.textContent = data.url;
+            resultVerdict.textContent = data.is_phishing ? '⚠️ Potential Phishing' : '✅ Likely Safe';
+            resultVerdict.className = data.is_phishing ? 'phishing' : 'safe';
+            resultConfidence.textContent = (data.confidence * 100).toFixed(2) + '%';
+            
+            // Display features
+            featuresBody.innerHTML = '';
+            for (const [feature, value] of Object.entries(data.features)) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatFeatureName(feature)}</td>
+                    <td>${value}</td>
+                `;
+                featuresBody.appendChild(row);
+            }
+            
+            // Show results div
+            resultsDiv.classList.remove('hidden');
+        }
+        
+        function formatFeatureName(name) {
+            return name
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, l => l.toUpperCase());
+        }
+        
+        function provideFeedback(correct) {
+            feedbackCorrect = correct;
+            
+            // Update UI
+            correctButton.classList.toggle('selected', correct);
+            incorrectButton.classList.toggle('selected', !correct);
+            submitFeedbackButton.classList.remove('hidden');
+        }
+        
+        function submitFeedback() {
+            if (feedbackCorrect === null || !currentUrlId) {
+                return;
+            }
+            
+            const notes = feedbackNotes.value.trim();
+            
+            fetch('/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    url_id: currentUrlId,
+                    correct: feedbackCorrect,
+                    notes
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Thank you for your feedback!');
+                    
+                    // Reset feedback section
+                    correctButton.classList.remove('selected');
+                    incorrectButton.classList.remove('selected');
+                    feedbackNotes.value = '';
+                    submitFeedbackButton.classList.add('hidden');
+                }
+            })
+            .catch(error => {
+                alert('Error submitting feedback: ' + error);
+            });
+        }
+        
+        function loadHistory() {
+            fetch('/history')
+            .then(response => response.json())
+            .then(data => {
+                displayHistory(data);
+                historyTable.classList.remove('hidden');
+            })
+            .catch(error => {
+                alert('Error loading history: ' + error);
+            });
+        }
+        
+        function displayHistory(historyData) {
+            historyBody.innerHTML = '';
+            
+            historyData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${truncateText(item.url, 30)}</td>
+                    <td class="${item.is_phishing ? 'phishing' : 'safe'}">${item.is_phishing ? '⚠️ Potential Phishing' : '✅ Likely Safe'}</td>
+                    <td>${(item.confidence * 100).toFixed(2)}%</td>
+                    <td>${formatDate(item.timestamp)}</td>
+                    <td><a href="/results/${item.id}" target="_blank">View Details</a></td>
+                `;
+                historyBody.appendChild(row);
+            });
+        }
+        
+        function truncateText(text, maxLength) {
+            if (text.length <= maxLength) return text;
+            return text.slice(0, maxLength) + '...';
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+    </script>
+</body>
+</html>
