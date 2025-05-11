@@ -24,28 +24,29 @@ A full-stack phishing URL detection system using machine learning. This app anal
 
 ## 🗂️ Project Structure
 
+```bash
 PHISHING-DETECTION/
 │
-├── app.py # Flask app main file
-├── db_setup.py # DB initialization script
-├── hello.py # Test or auxiliary route
-├── requirements.txt # Python dependencies
+├── app.py                 # Flask app main file
+├── db_setup.py           # DB initialization script
+├── hello.py              # Test or auxiliary route
+├── requirements.txt      # Python dependencies
 │
 ├── data/
-│ └── phishing_db.sqlite # SQLite DB storing scan history
+│   └── phishing_db.sqlite    # SQLite DB storing scan history
 │
 ├── model/
-│ ├── model.pkl # Trained ML model
-│ ├── features.py # URL feature extraction
-│ └── train_model.py # Model training script
+│   ├── model.pkl             # Trained ML model
+│   ├── features.py           # URL feature extraction
+│   └── train_model.py        # Model training script
 │
-├── static/ # Static assets (CSS, JS)
+├── static/               # Static assets (CSS, JS)
 │
 ├── templates/
-│ ├── index.html # Main input form
-│ └── results.html # Results display
+│   ├── index.html        # Main input form
+│   └── results.html      # Results display
 │
-└── .venv/ # Python virtual environment
+└── .venv/                # Python virtual environment
 
 yaml
 Copy
